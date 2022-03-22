@@ -1,0 +1,131 @@
+#    G1 Z5.0 F3000 # Move Z axis up a little to prevent scratching heat bed
+#    G1 X10.1 Y200.0 Z0.28 F5000.0 # Move to start position
+#    G1 X10.1 Y200.0 Z0.28 # Move to start for purge line
+#    G1 X10.1 Y200.0 Z0.28 F1500.0 E15 # Draw 1st line#
+#    G1 X10.4 Y200.0 Z0.28 F5000.0 # Move to side a little
+#    G1 X10.4 Y20 Z0.28 F1500.0 E30 # Draw 2nd line
+#    G92 E0 # Reset extruder
+#    G1 Z5.0 F3000 # Move Z up a little
+#    G1 X5 Y20 Z0.3 F5000.0 ; Move over to prevent blob squish
+
+
+[gcode_macro START_PRINT]
+gcode:
+    {% set BED_TEMP = params.BED_TEMP|default(65)|float %}
+    {% set EXTRUDER_TEMP = params.EXTRUDER_TEMP|default(215)|float %}
+    SET_PRESSURE_ADVANCE EXTRUDER=extruder ADVANCE=0.02605
+    M140 S{BED_TEMP}  # Start bed heating
+    M104 S{EXTRUDER_TEMP} #T0  
+    G90  # Use absolute coordinates
+    G28  # Home the printer
+    M190 S{BED_TEMP} # Wait for bed to reach temperature
+    M109 S{EXTRUDER_TEMP} # Set and wait for nozzle to reach temperature
+    # Reset the G-Code Z offset (adjust Z offset if needed)
+    SET_GCODE_OFFSET Z=-0.020
+    #LEVEL_BED_ADVANCED MAX_AGE=10 ; probe mesh eventually
+    BED_MESH_PROFILE LOAD=default
+    G1 Z5 F3000 # Move the nozzle near the bed
+    G1 Z0.15 F300 # Move the nozzle very close to the bed
+    G92 E0  # Reset extruder
+
+[gcode_macro START_PRINT_PETG]
+gcode:
+    {% set BED_TEMP = params.BED_TEMP|default(85)|float %}
+    {% set EXTRUDER_TEMP = params.EXTRUDER_TEMP|default(245)|float %}
+    SET_PRESSURE_ADVANCE EXTRUDER=extruder ADVANCE=0.06455
+    M140 S{BED_TEMP}  # Start bed heating
+    M104 S{EXTRUDER_TEMP} #T0  
+    G90  # Use absolute coordinates
+    G28  # Home the printer
+    M190 S{BED_TEMP} # Wait for bed to reach temperature
+    M109 S{EXTRUDER_TEMP} # Set and wait for nozzle to reach temperature
+    # Reset the G-Code Z offset (adjust Z offset if needed)
+    #SET_GCODE_OFFSET Z=-0.020
+    #LEVEL_BED_ADVANCED MAX_AGE=10 ; probe mesh eventually
+    BED_MESH_PROFILE LOAD=default
+    G1 Z5 F3000 # Move the nozzle near the bed
+    G1 Z0.15 F300 # Move the nozzle very close to the bed
+    G92 E0  # Reset extruder
+    
+[gcode_macro END_PRINT]
+gcode:
+        #Get Printer built volume dimensions
+        {% set X_MAX = printer.toolhead.axis_maximum.x|default(100)|float %}
+        {% set Y_MAX = printer.toolhead.axis_maximum.y|default(100)|float %}
+        #Fix-up extruder
+        G91                                            
+        G1 E-2 F2700                                    
+        G1 E-1.5 Z0.2 F2400                        
+        G1 X5 Y5 F6000                               
+        G1 Z10                                     
+        G90                                        
+        #Present print
+        G1 Z{printer.toolhead.position.z + 10} F600
+        G1 X{X_MAX / 2} Y{Y_MAX} F6000
+        M106 S0                                      
+        M104 S0                                       
+        M140 S0      
+        #SAVE_CONFIG if a mesh was probed in START_PRINT
+        SAVE_IF_SET     
+        #Disable Steppers
+        M84 X Y E                        
+
+[gcode_macro POWEROFF]
+gcode:
+  RESPOND TYPE=command MSG=action:poweroff
+  
+[gcode_macro CANCEL_PRINT]
+rename_existing: BASE_CANCEL_PRINT
+gcode:
+    # Raise nozzle by 10mm
+    G1 Z10 F3000
+    TURN_OFF_HEATERS
+    CLEAR_PAUSE
+    # Deliver print
+    G1 X260 Y260 Z{printer.toolhead.position.z + 10} F600
+    SDCARD_RESET_FILE
+    BASE_CANCEL_PRINT
+
+[pause_resume]
+
+[gcode_macro SET_BED_TEMPERATURE]
+gcode:
+  {% set BED = params.BED|default(65)|float %}
+  M190 S{BED}
+
+[gcode_macro SET_EXTRUDER_TEMPERATURE]
+gcode:
+  {% set EXTRUDER = params.EXTRUDER|default(210)|float %}
+  M109 S{EXTRUDER}
+
+[gcode_macro CR_Touch_Rest]
+gcode:
+  BLTOUCH_DEBUG COMMAND=reset
+
+[gcode_macro SET_RETRACTION_LENGTH]
+gcode:
+  TUNING_TOWER COMMAND=SET_RETRACTION PARAMETER=RETRACT_LENGTH START=0 FACTOR=0.05
+  #SET_RETRACTION RETRACT_LENGTH={params.LENGTH|float}
+  GET_RETRACTION
+
+[gcode_macro  PID_CALIBRATE_EXTRUDER]
+gcode:
+ PID_CALIBRATE HEATER=extruder TARGET=220 
+
+[gcode_macro  PID_CALIBRATE_BED]
+gcode:
+  PID_CALIBRATE HEATER=heater_bed TARGET=65
+
+[gcode_macro M900]
+gcode:
+  {% if 'K' in params %}
+    {% if 'E' in params %}
+      SET_PRESSURE_ADVANCE EXTRUDER={params.E} ADVANCE={params.K}
+    {% else %}
+      SET_PRESSURE_ADVANCE ADVANCE={params.K}
+    {% endif %}
+  {% endif %}
+
+[gcode_macro SET_SPEED]
+gcode:
+  M220 s{percentage}
