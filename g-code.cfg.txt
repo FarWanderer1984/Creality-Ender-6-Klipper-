@@ -1,13 +1,3 @@
-#    G1 Z5.0 F3000 # Move Z axis up a little to prevent scratching heat bed
-#    G1 X10.1 Y200.0 Z0.28 F5000.0 # Move to start position
-#    G1 X10.1 Y200.0 Z0.28 # Move to start for purge line
-#    G1 X10.1 Y200.0 Z0.28 F1500.0 E15 # Draw 1st line#
-#    G1 X10.4 Y200.0 Z0.28 F5000.0 # Move to side a little
-#    G1 X10.4 Y20 Z0.28 F1500.0 E30 # Draw 2nd line
-#    G92 E0 # Reset extruder
-#    G1 Z5.0 F3000 # Move Z up a little
-#    G1 X5 Y20 Z0.3 F5000.0 ; Move over to prevent blob squish
-
 
 [gcode_macro START_PRINT]
 gcode:
