@@ -28,9 +28,11 @@ SET_HEATER_TEMPERATURE HEATER=extruder TARGET={material_print_temperature_layer_
 
 PLA machine settings
 
-  START_PRINT_PLA
-  SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET={material_bed_temperature_layer_0}
-  SET_HEATER_TEMPERATURE HEATER=extruder TARGET={material_print_temperature_layer_0}
+START_PRINT_PLA
+
+SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET={material_bed_temperature_layer_0}
+
+SET_HEATER_TEMPERATURE HEATER=extruder TARGET={material_print_temperature_layer_0}
 
 end code is just End_Print
 
@@ -40,4 +42,4 @@ Pressure advance has the codes added for direct drive so I can just click print 
 
 Klipper pressure advance tutorial https://github.com/Klipper3d/klipper/blob/master/docs/Pressure_Advance.md?msclkid=cc98469dae2011ec8f83129ad8d68d2c
   
-  
+z_offset is just useed so I can adjust it live and if need be add the SET_GCODE_OFFSET Z=???? to my start print as this way I'm not redoing the offset for each filiment, as PETG can like abit more head room over PLA which can sometimes prefare abit of squish.    
