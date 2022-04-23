@@ -28,7 +28,7 @@ SET_HEATER_TEMPERATURE HEATER=extruder TARGET={material_print_temperature_layer_
 
 PLA machine settings
 
-START_PRINT_PLA
+START_PRINT
 
 SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET={material_bed_temperature_layer_0}
 
